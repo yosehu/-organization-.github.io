@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>3D Poker</title>
+        <link rel="stylesheet" href="css/style.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/21.0.0/tween.umd.js"></script>
+        <head>
+            <meta charset="UTF-8">
+            <title>チート能力で戦う3Dポーカーゲーム</title>
+            <meta name="description" content="難易度選択やイカサマチートシステムを搭載した、Three.jsによる臨場感あふれる3Dポーカーゲームです。">
+            <meta name="keywords" content="ポーカー,ゲーム,3Dポーカー,チートポーカー,無料ゲーム">
+            </head>
+    </head>
+<body>
+    <div id="game-ui">
+        <div id="status-bar">
+            <div>チップ: <span id="chips">100</span></div>
+            <div id="hand-rank">-</div>
+        </div>
+        <div id="controls">
+            <button id="deal-btn">ゲーム開始</button>
+            <p id="message">読み込み中...</p>
+        </div>
+    </div>
+    <div id="three-container"></div>
+
+    <script src="js/index.js"></script>
+</body>
+</html>
