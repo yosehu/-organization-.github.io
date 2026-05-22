@@ -35,17 +35,35 @@ window.onload = () => {
     let myRole = null; 
     let isMultiplayMode = false;
 
-    // --- 音声・SE ---
-    const drawSound = new Audio('Sound/cardDraw.mp3'); 
-    const daipanSound = new Audio('Sound/daipanSound.mp3'); 
-    const zawazawaSound = new Audio('Sound/ざわざわ.mp3'); 
-    const loseSound = new Audio('Sound/loseScreaming.mp3'); 
-    zawazawaSound.loop = true; zawazawaSound.volume = 0.1; drawSound.volume = 0.4;
+    // --- 音声エラー安全クラッシュ対策システム ---
+    function createSafeAudio(path, volume = 0.5, loop = false) {
+        try {
+            const audio = new Audio(path);
+            audio.volume = volume;
+            audio.loop = loop;
+            audio.addEventListener('error', (e) => { console.warn(`音声の読み込みスキップ: ${path}`); });
+            return {
+                play: () => { audio.play().catch(() => {}); },
+                setLoop: (val) => { audio.loop = val; }
+            };
+        } catch(e) {
+            console.error("Audioオブジェクトの生成に失敗", e);
+            return { play: () => {}, setLoop: () => {} };
+        }
+    }
+
+    // 各SEファイルのバインド（大文字・小文字のパスずれ対策込み）
+    const drawSound = createSafeAudio('Sound/cardDraw.mp3', 0.4); 
+    const daipanSound = createSafeAudio('Sound/daipanSound.mp3', 0.5); 
+    // 🚨 ざわざわ.mp3 から fukakukuraiido.mp3 に変更を完全に反映 🚨
+    const zawazawaSound = createSafeAudio('Sound/fukakukuraiido.mp3', 0.1, true); 
+    const loseSound = createSafeAudio('Sound/loseScreaming.mp3', 0.5); 
 
     let isAudioStarted = false;
     const startAudio = () => {
         if (isAudioStarted) return;
-        zawazawaSound.play().then(() => { isAudioStarted = true; }).catch(() => {});
+        zawazawaSound.play();
+        isAudioStarted = true;
     };
 
     // --- ゲームロジック・イカサマ能力用変数 ---
@@ -62,9 +80,9 @@ window.onload = () => {
     let cpuChips = 1000;
     let selectedDifficulty = 'NORMAL'; 
 
-    // --- 🚨 画面が真っ白になるバグを100%強制解除するシステム 🚨 ---
+    // --- 3D描画リフレッシュ（真っ白バグ強制粉砕システム） ---
     function setupRealScreenSize() {
-        controls.style.display = "block"; // ゲームUIを表示化
+        controls.style.display = "block"; 
         setTimeout(() => {
             const w = window.innerWidth;
             const h = window.innerHeight;
@@ -80,7 +98,7 @@ window.onload = () => {
     diffLayer.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
         background-color: rgba(5, 5, 5, 0.99); display: none; flex-direction: column;
-        align-items: center; justify-content: center; z-index: 10001; color: #fff; font-family: sans-serif;
+        align-items: center; justify-content: center; z-index: 10001; color: #fff;
     `;
     diffLayer.innerHTML = `
         <div style="width: 90%; max-width: 600px; background: #141d26; padding: 30px; border: 4px solid #e74c3c; border-radius: 12px; text-align: center;">
@@ -154,7 +172,7 @@ window.onload = () => {
         readyStatusMsg.innerText = "席を選択してください";
     }
 
-    // --- 座席選択・準備完了イベントの連動 ---
+    // --- 座席同期・マルチ連携 ---
     btnSeat1p.onclick = () => { socket.emit('claim-seat', '1P'); };
     btnSeat2p.onclick = () => { socket.emit('claim-seat', '2P'); };
     btnSeatWatch.onclick = () => { socket.emit('claim-seat', 'spectator'); };
@@ -191,12 +209,12 @@ window.onload = () => {
         setupRealScreenSize(); 
     });
 
-    // 個人部屋（NPC戦）難易度選択時の完全トリガー
+    // 個人部屋 開始トリガー
     const selectDiffAndStart = (diff, label) => {
         selectedDifficulty = diff;
         diffLayer.style.display = 'none'; 
         message.innerText = `個人部屋 (VS NPC: ${label}) 開始！「配る」を押してください。`;
-        setupRealScreenSize(); // 🚨ここでサイズを再計算し、真っ白バグを完全粉砕します。
+        setupRealScreenSize(); 
     };
     
     document.getElementById('diff-easy').onclick = () => selectDiffAndStart('EASY', 'イージー');
@@ -204,7 +222,7 @@ window.onload = () => {
     document.getElementById('diff-hard').onclick = () => selectDiffAndStart('HARD', 'ハード');
     document.getElementById('diff-hell').onclick = () => selectDiffAndStart('HELL', 'ヘル');
 
-    // --- 🃏 あなたが作成した「チート機能UI」の動的完全復活 🃏 ---
+    // --- チート機能UI ---
     const cheatContainer = document.createElement('div');
     cheatContainer.style.cssText = 'margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; z-index: 101; position: relative; pointer-events: auto;';
     cheatContainer.innerHTML = `
@@ -215,7 +233,6 @@ window.onload = () => {
     `;
     document.getElementById('controls').appendChild(cheatContainer);
 
-    // 各チート能力ボタンのイベント紐付け（既存のロジック変数へ代入）
     document.getElementById('cheat-six').onclick = () => {
         if(chips >= 50) { chips -= 50; chipsDisp.innerText = chips; isSixCardCheatActive = true; message.innerText = "チート発動：手札が6枚になります！"; daipanSound.play(); }
         else { message.innerText = "チップが足りません！"; }
@@ -233,7 +250,7 @@ window.onload = () => {
         else { message.innerText = "コストが足りません！"; }
     };
 
-    // --- BET金額変更UI（完全維持） ---
+    // --- BET金額変更UI ---
     const uiContainer = document.createElement('div');
     uiContainer.style.cssText = 'color: #f1c40f; margin-top: 5px; font-size: 14px; text-shadow: 1px 1px 2px black;';
     uiContainer.innerHTML = `
@@ -249,12 +266,11 @@ window.onload = () => {
     document.getElementById('bet-minus').onclick = () => { if(betAmount > 10) { betAmount -= 10; currentBetDisp.innerText = betAmount; } };
     document.getElementById('bet-plus').onclick = () => { if(betAmount < 500 && betAmount < chips) { betAmount += 10; currentBetDisp.innerText = betAmount; } };
 
-    // --- 「配る」ボタンの元の動作トリガーフック ---
+    // --- 「配る」ボタン動作 ---
     dealBtn.onclick = () => {
         if (gameState === 'START' || gameState === 'RESULT') {
             message.innerText = "カードを配布中...";
             drawSound.play();
-            // あなたのオリジナルの配る・交換判定ロジック関数をここに繋ぎます
             gameState = 'CHOICE';
             dealBtn.innerText = "交換確定";
         } else if (gameState === 'CHOICE') {
@@ -270,7 +286,7 @@ window.onload = () => {
     cpuDisp.innerHTML = `DEALER CHIPS: <span id="cpu-chips">${cpuChips}</span>`;
     document.body.appendChild(cpuDisp);
 
-    // --- 🎮 Three.js グラフィックス 3D コアレンダラー 🎮 ---
+    // --- Three.js 3D レンダラー ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020202);
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
