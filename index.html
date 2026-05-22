@@ -1,32 +1,104 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <title>3D Poker</title>
-        <link rel="stylesheet" href="css/style.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/21.0.0/tween.umd.js"></script>
-        <link rel="shortcut icon" href="#">
-    </head>
-    <head>
-        <meta charset="UTF-8">
-        <title>チート能力で戦う3Dポーカーゲーム</title>
-        <meta name="description" content="難易度選択やイカサマチートシステムを搭載した、Three.jsによる臨場感あふれる3Dポーカーゲームです。">
-        <meta name="keywords" content="ポーカー,ゲーム,3Dポーカー,チートポーカー,無料ゲーム">
-    </head>
-<body>
-    <div id="game-ui">
-        <div id="status-bar">
-            <div>チップ: <span id="chips">100</span></div>
-            <div id="hand-rank">-</div>
-        </div>
-        <div id="controls">
-            <button id="deal-btn">ゲーム開始</button>
-            <p id="message">読み込み中...</p>
+<head>
+    <meta charset="UTF-8">
+    <title>チート能力で戦う3Dポーカーゲーム</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="js/index.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden; background: #000; width: 100vw; height: 100vh;">
+
+    <div id="rule-layer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(10, 10, 10, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10005; color: #f1c40f; font-family: sans-serif; padding: 20px; box-sizing: border-box; text-align: center;">
+        <div style="width: 100%; max-width: 850px; height: 90vh; background: #1a252f; padding: 25px; border: 5px solid #f1c40f; border-radius: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto;">
+            <h1 style="font-size: 32px; margin: 0 0 10px 0; font-weight: bold; text-shadow: 2px 2px black;">◆ 遊び方 ＆ ルール説明 ◆</h1>
+            
+            <div style="display: flex; gap: 15px; flex: 1; min-height: 0; text-align: left; margin-bottom: 15px;">
+                <div style="flex: 1; background: #0f171e; border: 1px solid #34495e; border-radius: 6px; padding: 15px; color: #fff; font-size: 14px; overflow-y: auto; line-height: 1.6;">
+                    <h3 style="color: #f1c40f; margin-top: 0; font-size: 18px; border-bottom: 2px solid #f1c40f;">🎮 ゲーム方法</h3>
+                    <p><strong>1. ベット:</strong> 「+10」「-10」で賭け金を設定（最大500）。</p>
+                    <p><strong>2. 配る:</strong> ボタンを押して手札を配布。</p>
+                    <p><strong>3. 交換:</strong> カードを左クリックで選択し「交換確定」。</p>
+                    <h3 style="color: #f1c40f; font-size: 18px; border-bottom: 2px solid #f1c40f; margin-top: 15px;">🃏 イカサマ能力</h3>
+                    <p>強力なチートを発動させてディーラーをねじ伏せろ！</p>
+                </div>
+                
+                <div style="flex: 1.2; background: #0f171e; border: 1px solid #34495e; border-radius: 6px; padding: 10px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #fff; text-align: center;">
+                        <tr style="background: #2c3e50; color: #f1c40f;"><th>役名</th><th>倍率</th></tr>
+                        <tr><td>ファイブカード</td><td>10倍</td></tr>
+                        <tr><td>ロイヤルSF</td><td>9倍</td></tr>
+                        <tr><td>ストレートF</td><td>8倍</td></tr>
+                        <tr><td>フォーカード</td><td>7倍</td></tr>
+                        <tr><td>フルハウス</td><td>6倍</td></tr>
+                        <tr><td>フラッシュ</td><td>5倍</td></tr>
+                        <tr><td>ストレート</td><td>4倍</td></tr>
+                        <tr><td>スリーカード</td><td>3倍</td></tr>
+                        <tr><td>ツーペア</td><td>2倍</td></tr>
+                        <tr><td>ワンペア</td><td>1倍</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <button id="game-start-btn" style="background: #c0392b; color: white; border: 3px solid #f1c40f; padding: 15px 0; font-size: 22px; font-weight: bold; cursor: pointer; border-radius: 6px; width: 100%;">
+                領解！ モード選択へ進む
+            </button>
         </div>
     </div>
-    <div id="three-container"></div>
 
-    <script src="js/index.js"></script>
+    <div id="lobby-layer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10,10,10,0.96); z-index: 10002; display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: sans-serif;">
+        <div style="background: #1a252f; padding: 40px; border-radius: 12px; border: 4px solid #3498db; text-align: center; width: 90%; max-width: 450px;">
+            <h2 style="font-size: 30px; color: #3498db; margin-bottom: 25px;">🎮 モード選択</h2>
+            <button id="btn-solo-mode" style="width: 100%; padding: 15px; font-size: 20px; font-weight:bold; margin-bottom: 20px; background: #2ecc71; color: white; border: none; border-radius: 6px; cursor: pointer;">🕹️ 個人部屋 (VS NPC)</button>
+            <button id="btn-multi-mode" style="width: 100%; padding: 15px; font-size: 20px; font-weight:bold; background: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer;">⚔️ マルチプレイ (対人戦)</button>
+        </div>
+    </div>
+
+    <div id="multi-choice-layer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10,10,10,0.96); z-index: 10003; display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: sans-serif;">
+        <div style="background: #1a252f; padding: 35px; border-radius: 12px; border: 4px solid #9b59b6; text-align: center; width: 90%; max-width: 450px;">
+            <h2 style="font-size: 26px; color: #9b59b6; margin-bottom: 25px;">⚔️ マルチプレイ設定</h2>
+            <button id="btn-net-match" style="width: 100%; padding: 14px; font-size: 18px; margin-bottom: 20px; background: #e67e22; color: white; border: none; border-radius: 6px; cursor: pointer;">🌐 インターネット対戦 (マッチング)</button>
+            
+            <div style="border-top: 1px solid #555; padding-top: 20px; margin-top: 15px;">
+                <p style="font-size: 15px; margin-bottom: 8px; color: #f1c40f;">🔑 プライベートルーム設定</p>
+                <input type="text" id="room-input" placeholder="部屋番号を入力 (例: 777)" style="width: 80%; padding: 10px; font-size: 18px; text-align: center; margin-bottom: 12px; border-radius: 4px; border: none; color: #000;">
+                <button id="btn-private-match" style="width: 100%; padding: 12px; font-size: 18px; background: #34495e; color: white; border: none; border-radius: 6px; cursor: pointer;">🔒 部屋に入る / 作る</button>
+            </div>
+            <button id="btn-multi-back" style="margin-top: 25px; background: none; color: #aaa; border: none; cursor: pointer; text-decoration: underline;">戻る</button>
+        </div>
+    </div>
+
+    <div id="room-stage-layer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15,15,15,0.99); z-index: 10004; display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: sans-serif;">
+        <div style="background: #2c3e50; padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 550px; border: 3px solid #f1c40f;">
+            <h2 id="stage-title" style="font-size: 26px; color: #f1c40f; margin-bottom: 5px;">🚪 ルーム待機室</h2>
+            <p id="spectator-count" style="color: #bdc3c7; font-size: 14px; margin-bottom: 20px;">観戦者数: 0人</p>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
+                <button id="btn-seat-1p" style="flex: 1; padding: 15px 5px; font-size: 18px; font-weight:bold; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer;">1P席に入る</button>
+                <button id="btn-seat-2p" style="flex: 1; padding: 15px 5px; font-size: 18px; font-weight:bold; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">2P席に入る</button>
+                <button id="btn-seat-watch" style="flex: 1; padding: 15px 5px; font-size: 16px; background: #7f8c8d; color: white; border: none; border-radius: 6px; cursor: pointer;">観戦する</button>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 6px; text-align: left; margin-bottom: 20px; font-size: 16px; border-left: 5px solid #2ecc71;">
+                <div style="margin-bottom: 8px;">🔴 1Pプレイヤー: <span id="status-1p" style="font-weight: bold;">空席</span></div>
+                <div>🔵 2Pプレイヤー: <span id="status-2p" style="font-weight: bold;">空席</span></div>
+            </div>
+
+            <button id="btn-ready" style="width: 100%; padding: 15px; font-size: 22px; font-weight: bold; background: #2ecc71; color: white; border: none; border-radius: 6px; cursor: pointer; display: none; box-shadow: 0 4px #27ae60;">👍 準備完了 (READY)</button>
+            <p id="ready-status-msg" style="color: #2ecc71; font-size: 16px; font-weight: bold; margin-top: 10px; min-height: 20px;"></p>
+            <button id="btn-room-leave" style="margin-top: 15px; background:none; border:none; color:#e74c3c; cursor:pointer; text-decoration:underline;">退室する</button>
+        </div>
+    </div>
+
+    <div id="three-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;"></div>
+    
+    <div id="controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center; width: 100%; max-width: 650px; pointer-events: auto; z-index: 100; display: none;">
+        <div id="message" style="color: white; font-size: 24px; margin-bottom: 8px; font-family: sans-serif; text-shadow: 2px 2px 4px black; min-height: 28px;"></div>
+        <div id="hand-rank" style="color: #f1c40f; font-size: 18px; margin-bottom: 8px; font-family: sans-serif; min-height: 22px;"></div>
+        <button id="deal-btn" style="background: #2ecc71; color: white; border: none; padding: 12px 40px; font-size: 22px; font-weight: bold; border-radius: 5px; cursor: pointer; box-shadow: 0 4px #27ae60;">配る</button>
+        <div style="color: #fff; font-size: 18px; margin-top: 8px; font-family: sans-serif;">CHIPS: <span id="chips">1000</span></div>
+    </div>
 </body>
 </html>
