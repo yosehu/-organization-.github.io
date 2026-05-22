@@ -1,0 +1,148 @@
+/* 全体のレイアウト */
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000;
+}
+
+#three-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* 3Dを背面に */
+}
+
+/* UIコンテナを最前面へ */
+#game-ui {
+    position: absolute;
+    top: 10px; /* 少し隙間を開ける */
+    left: 0;
+    width: 100%;
+    z-index: 999; /* 確実に一番上へ */
+    pointer-events: none; /* 下のカード選択を邪魔しない */
+}
+
+/* ステータスとボタンのエリア */
+#status-bar, #controls {
+    pointer-events: auto; /* ボタンや文字はクリック可能に */
+    width: fit-content;
+    margin: 5px auto;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#status-bar {
+    display: flex;
+    gap: 20px;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+#deal-btn {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 10px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+#deal-btn:hover {
+    background-color: #2ecc71;
+}
+
+#message {
+    color: #f1c40f;
+    margin-top: 5px;
+    font-size: 14px;
+}
+/* 既存の .card に追加 */
+.card {
+    perspective: 1000px;
+    background-color: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    /* ... 以前のスタイル ... */
+}
+
+/* 裏面状態のカードを少し目立たせる（オプション） */
+.card img[src*="back"] {
+    filter: brightness(0.8) sepia(0.2);
+}
+
+/* 画像がない場合のレイアウト */
+.card-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.card-fallback .val {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.card-fallback .suit {
+    font-size: 24px;
+}
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000;
+    font-family: sans-serif;
+}
+#three-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* 背面 */
+}
+
+#game-ui {
+    position: absolute;
+    top: 20px; /* 上部に配置 */
+    left: 0;
+    width: 100%;
+    z-index: 9999; /* 確実に最前面 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none; /* UIの隙間を透過してカードを触れるようにする */
+}
+
+#status-bar, #controls {
+    pointer-events: auto; /* ボタンや文字はクリック可能にする */
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    color: white;
+}
+
+#deal-btn {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#deal-btn:hover {
+    background-color: #2ecc71;
+}
